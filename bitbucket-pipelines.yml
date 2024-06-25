@@ -1,0 +1,44 @@
+image: maven:3.8.4-jdk-11
+
+definitions:
+  steps: &deploy
+    name: 'Build and Deploy'
+    caches:
+      - maven
+    script:
+      - export BUILDTIMESTAMP=$(date +%s)
+      - export BITBUCKET_COMMIT_SHORT="${BITBUCKET_COMMIT::8}"
+      - export VERSION_ID="$BITBUCKET_BRANCH$BITBUCKET_COMMIT_SHORT"
+      - apt-get update && apt-get install -y zip
+      - mvn clean package -DskipTests=true
+      # Prepare package
+      - mkdir dist
+      - cp target/movie-rental-bootable.jar dist/
+      - cp target/movie-rental.war dist/
+      - cp Procfile dist/
+      - zip -j dist.zip dist/*
+      - pipe: atlassian/aws-elasticbeanstalk-deploy:1.0.2
+        variables:
+          AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+          AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+          AWS_DEFAULT_REGION: $AWS_REGION
+          ENVIRONMENT_NAME: $AWS_EB_ENVIRONMENT_NAME
+          APPLICATION_NAME: 'samuel-bootstrap'
+          ZIP_FILE: 'dist.zip'
+          S3_BUCKET: 'movie-rental-deployment'
+          VERSION_LABEL: '$BUILDTIMESTAMP-$VERSION_ID'
+
+pipelines:
+  default:
+    - step:
+        name: 'Integration Test'
+        caches:
+          - maven
+        script:
+          - mvn -B verify
+
+  branches:
+    master:
+      - step:
+          <<: *deploy
+          deployment: dev
