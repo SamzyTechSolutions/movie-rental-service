@@ -1,0 +1,2 @@
+# movie rental service
+ Movie Rental Service showcasing the integration and implementation of various technologies within a Java and Kotlin environment. It includes configurations for WildFly, testing with Arquillian, REST API development using Resteasy, and utilizes Kotlin for concise and expressive code. Developed by Hextremelabs Ltd, this project emphasizes best practices in enterprise application development, testing methodologies, and efficient deployment strategies using Maven. It integrates with Bitbucket Pipelines for streamlined CI/CD workflows.
